@@ -1,0 +1,118 @@
+Install proxmox didalam proxmox
+proxmox = 
+Steps to install WordPress on Ubuntu 22.04 LTS Linux
+1. Update Ubuntu 22.04 :          
+"sudo apt update && sudo apt upgrade"
+
+INSTALL DNS SERVER
+apt update
+apt install bind9 resolvconf dnsutils -y
+cd /etc/bind
+cp db.local atha.com
+cp db.127 atha.com reverse
+
+nano atha.com 
+localhost-> atha.com
+  ;
+  @ IN NS atha.com
+
+  ; A Record Kita
+  @             IN A 192.168.242.145
+  www.atha.com  IN CNAME atha.com.
+
+nano atha.com.reverse
+localhost-> atha.com
+  ;Pointer
+  @   IN NS atha.com
+  147 IN PTR atha.com
+  147 IN PTR www.atha.com
+147-> ip blkng
+
+nano named.conf.local
+  zone "atha.com" {
+      type master;
+      file "/etc/bind/atha.com";
+};
+    zone "242.168.192.in-addr.arpa" {
+      type master ;
+      file "/etc/bind/atha.com.reverse";
+};
+
+/etc/init.d/named restart
+nano /etc/resolv.conf
+
+  nameserver 192.168.242.145
+  search atha.com
+
+nslookup atha.com
+
+
+( ERROR )
+echo "nameserver 8.8.8.8 | sudo tee /etc/resolv.conf >/dev/null
+
+
+2. Install Apache & PHP for WordPress 
+INSTALL APACHE : web server
+"sudo apt install apache2" -> install apache
+"sudo systemctl enable apache2"  -> untuk mengaktifkan 
+"systemctl status apache2" -> cek status apache sudah hidup belum
+"http://server-ip-address" -> cek apache sudah terinstall belum
+
+INSTALL PHP : bahasa pemograman PHP untuk setting CMS WordPress
+"sudo apt install -y php php-{common,mysql,xml,xmlrpc,curl,gd,imagick,cli,dev,imap,mbstring,opcache,soap,zip,intl}" -> untuk install php versi 8
+"php -v" -> cek versi php
+
+3. Install MariaDB or MySQL : membuat database server
+"sudo apt install mariadb-server mariadb-client" -> install mariadb
+"sudo systemctl enable --now mariadb" -> buat aktifkan mysql
+"systemctl status mariadb" ->  cek status
+"sudo mysql_secure_installation" -> untuk mengamankan 
+
+4. Create Database for WordPress
+"sudo mysql -u root -p" -> login database
+"CREATE USER 'new_user'@'localhost' IDENTIFIED BY 'your_password';  "
+"CREATE DATABASE new_db;
+GRANT ALL PRIVILEGES ON new_db.* TO 'new_user'@'localhost';
+FLUSH PRIVILEGES;
+Exit;"
+
+5.  Install WordPress on Ubuntu 22.04
+"sudo apt install wget unzip"-> unduh secara manual 
+"wget https://wordpress.org/latest.zip"-> download wordpress
+"sudo unzip latest.zip"-> ekstrak file 
+"sudo mv wordpress/ /var/www/html/"-> Pindah ke folder web
+"sudo rm latest.zip" -> Hapus file yang diunduh untuk mengosongkan ruang
+"sudo chown www-data:www-data -R /var/www/html/wordpress/" 
+"sudo chmod -R 755 /var/www/html/wordpress/" -> Ubah izin file
+
+6. Configure Apache on Ubuntu 22.04
+"sudo nano /etc/apache2/sites-available/wordpress.conf" -> Buat file konfigurasi untuk WordPress
+ <VirtualHost *:80>
+
+ServerAdmin admin@example.com
+
+DocumentRoot /var/www/html/wordpress
+ServerName example.com
+ServerAlias www.example.com
+
+<Directory /var/www/html/wordpress/>
+
+Options FollowSymLinks
+AllowOverride All
+Require all granted
+
+</Directory>
+
+ErrorLog ${APACHE_LOG_DIR}/error.log
+CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>
+
+->  Ctlr+O, hitting the Enter key, and then exiting using Ctrl+X.
+" sudo a2ensite wordpress.conf " -> Aktifkan host virtual
+" sudo a2enmod rewrite "
+" sudo a2dissite 000-default.conf "
+" sudo systemctl restart apache2 " -> restart apache
+
+7. WordPress CMS web interface setup
+ " http://your-server-ip-address "
